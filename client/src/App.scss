@@ -1,0 +1,10 @@
+@import "bootstrap/scss/bootstrap";
+body {
+  min-height: 100vh;
+  background: linear-gradient(
+    203deg,
+    rgba(58, 180, 170, 0.9) 0%,
+    rgba(29, 201, 253, 0.9) 50%,
+    rgba(69, 252, 191, 0.9) 100%
+  );
+}
