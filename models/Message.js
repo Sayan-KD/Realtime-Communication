@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
 const MessageSchema = new mongoose.Schema({
-  id: { type: mongoose.Schema.Types.ObjectId, required: true },
-  user: { type: String, required: true },
-  content: { type: String, required: true }
+  content: { type: String, required: true },
+  from: { type: String },
+  to: { type: String, required: true },
 });
 
-module.exports = MessageSchema;
+module.exports = mongoose.model("Message", MessageSchema);

@@ -4,9 +4,9 @@ import { gql, useLazyQuery } from "@apollo/client";
 import { Link } from "react-router-dom";
 
 const LOGIN_USER = gql`
-  query login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
-      email
+  query login($userName: String!, $password: String!) {
+    login(userName: $userName, password: $password) {
+      userName
       token
     }
   }
@@ -14,14 +14,13 @@ const LOGIN_USER = gql`
 
 export default function Register(props) {
   const [variables, setVariables] = useState({
-    email: "",
+    userName: "",
     password: "",
   });
 
   const [loginUser, { loading }] = useLazyQuery(LOGIN_USER, {
     onCompleted(data) {
-      localStorage.setItem("token", data.login.token); /*temporary*/
-      localStorage.setItem("email", data.login.email);
+      localStorage.setItem("token", data.login.token);
       props.history.push("/");
     },
   });
@@ -38,12 +37,12 @@ export default function Register(props) {
         <h1 className="text-center">Login</h1>
         <Form onSubmit={submitLoginForm}>
           <Form.Group>
-            <Form.Label>Email Address</Form.Label>
+            <Form.Label>Username</Form.Label>
             <Form.Control
               type="text"
-              value={variables.email}
+              value={variables.userName}
               onChange={(e) =>
-                setVariables({ ...variables, email: e.target.value })
+                setVariables({ ...variables, userName: e.target.value })
               }
             />
           </Form.Group>
