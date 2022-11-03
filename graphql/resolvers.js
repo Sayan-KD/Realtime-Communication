@@ -10,7 +10,25 @@ module.exports = {
   Query: {
     getUsers: async (_, __, { user }) => {
       if (!user) throw new AuthenticationError("Unauthenticated");
-      return await User.find({ email: { $ne: user.email } });
+      let users = await User.find({
+        userName: { $ne: user.userName },
+      }).select("userName");
+
+      const allUserMessages = await Message.find()
+        .or([{ from: user.userName }, { to: user.userName }])
+        .sort({ _id: -1 });
+
+      users = users.map((otherUser) => {
+        let latestMessage = allUserMessages.map((m) => {
+          if (m.from === otherUser.userName || m.to === otherUser.userName)
+            return m;
+        });
+        otherUser.latestMessage = latestMessage;
+        //console.log(otherUser.latestMessage);
+        return otherUser;
+      });
+
+      return users;
     },
     login: async (_, args) => {
       const { userName, password } = args;
@@ -56,6 +74,7 @@ module.exports = {
       return messages;
     },
   },
+
   Mutation: {
     register: (_, args) => {
       // const hashPw = await bcrypt.hash(args.userInput.password, 12);

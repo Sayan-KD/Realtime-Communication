@@ -1,20 +1,34 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { Row, Button, Col } from "react-bootstrap";
-import { gql, useQuery } from "@apollo/client";
+import { gql, useLazyQuery, useQuery } from "@apollo/client";
 import { Link } from "react-router-dom";
 import jwtDecode from "jwt-decode";
 let user;
 const GET_USERS = gql`
   query getUsers {
     getUsers {
-      email
       userName
+      latestMessage {
+        content
+        to
+        from
+      }
     }
   }
 `;
 
+const GET_MESSAGES = gql`
+  query ($from: String!) {
+    getMessages(from: $from) {
+      content
+      from
+      to
+    }
+  }
+`;
 export default function Home(props) {
   const token = localStorage.getItem("token");
+  const [selectedUser, setSelectedUser] = useState(null);
   let userDetails;
   if (token) {
     const decodedToken = jwtDecode(token);
@@ -27,9 +41,19 @@ export default function Home(props) {
   } else {
     console.log("no token");
   }
-  const { loading, data, error } = useQuery(GET_USERS);
-  if (data) console.log(data);
-  if (error) console.log(error);
+  const { loading, data } = useQuery(GET_USERS);
+
+  const [getMessages, { loading: messagesLoading, data: messagesData }] =
+    useLazyQuery(GET_MESSAGES);
+
+  useEffect(() => {
+    if (selectedUser) {
+      getMessages({ variables: { from: selectedUser } });
+    }
+  }, [selectedUser]);
+
+  if (messagesData) console.log(messagesData.getMessages);
+
   const logout = () => {
     localStorage.removeItem("token");
     userDetails = null;
@@ -41,13 +65,18 @@ export default function Home(props) {
   } else if (data.getUsers.length === 0) {
     userDetails = <p>No Users...</p>;
   } else if (data.getUsers.length > 0) {
-    userDetails = data.getUsers.map((user) => {
-      return (
-        <div key={user.userName}>
-          <p>{user.userName}</p>
+    userDetails = data.getUsers.map((user) => (
+      <div
+        className="d-flex p-3"
+        key={user.userName}
+        onClick={() => setSelectedUser(user.userName)}
+      >
+        <div>
+          <p className="text-success">{user.userName}</p>
+          <p className="font-weight-light">You are now connected!</p>
         </div>
-      );
-    });
+      </div>
+    ));
   }
   return (
     <Fragment>
@@ -68,8 +97,19 @@ export default function Home(props) {
           </Button>
         </Col>
       </Row>
-      <Row className="mt-3 bg-white p-3">
-        <Col>{userDetails}</Col>
+      <Row className="mt-3 bg-white ">
+        <Col xs={4} className="p-0 bg-secondary">
+          {userDetails}
+        </Col>
+        <Col xs={8}>
+          {messagesData && messagesData.getMessages.length > 0 ? (
+            messagesData.getMessages.map((message) => (
+              <p key={message.content}>{message.content}</p>
+            ))
+          ) : (
+            <p>Messages</p>
+          )}
+        </Col>
       </Row>
     </Fragment>
   );
